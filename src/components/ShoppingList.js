@@ -1,32 +1,56 @@
-import React, { useState } from "react";
+// src/components/ShoppingList.js
+import React, { useEffect, useState } from "react";
 import ItemForm from "./ItemForm";
-import Filter from "./Filter";
 import Item from "./Item";
+import Filter from "./Filter"; // Optional, if you're implementing category filter
 
 function ShoppingList() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [items, setItems] = useState([]);
 
-  function handleCategoryChange(category) {
-    setSelectedCategory(category);
+  // GET items on load
+  useEffect(() => {
+    fetch("http://localhost:4000/items")
+      .then((res) => res.json())
+      .then((data) => setItems(data));
+  }, []);
+
+  // Add new item
+  function handleAddItem(newItem) {
+    setItems([...items, newItem]);
   }
 
-  const itemsToDisplay = items.filter((item) => {
-    if (selectedCategory === "All") return true;
+  // Update item
+  function handleUpdateItem(updatedItem) {
+    const updatedItems = items.map((item) =>
+      item.id === updatedItem.id ? updatedItem : item
+    );
+    setItems(updatedItems);
+  }
 
-    return item.category === selectedCategory;
-  });
+  // Delete item
+  function handleDeleteItem(deletedItem) {
+    const updatedItems = items.filter((item) => item.id !== deletedItem.id);
+    setItems(updatedItems);
+  }
+
+  const itemsToDisplay = items.filter((item) =>
+    selectedCategory === "All" ? true : item.category === selectedCategory
+  );
 
   return (
     <div className="ShoppingList">
-      <ItemForm />
-      <Filter
-        category={selectedCategory}
-        onCategoryChange={handleCategoryChange}
-      />
+      <ItemForm onAddItem={handleAddItem} />
+      category={selectedCategory}
+      onCategoryChange={setSelectedCategory}
       <ul className="Items">
         {itemsToDisplay.map((item) => (
-          <Item key={item.id} item={item} />
+          <Item
+            key={item.id}
+            item={item}
+            onUpdateItem={handleUpdateItem}
+            onDeleteItem={handleDeleteItem}
+          />
         ))}
       </ul>
     </div>
